@@ -1,0 +1,36 @@
+version: 2
+
+jobs:
+  build:
+    branches:
+      only:
+        - master
+        - dev
+    docker:
+      - image: "debian:sid"
+    steps:
+      - checkout
+      - run:
+          name: Updating
+          command: 'apt-get update'
+      - run:
+          name: Installing sudo
+          command: 'apt-get install -y sudo'
+      - run:
+          name: Installing gcc
+          command: 'apt-get install -y gcc g++'
+      - run:
+          name: Installing libboost
+          command: 'apt-get install -y libboost-all-dev'
+      - run:
+          name: Installing cmake
+          command: 'sudo apt-get install -y cmake'
+      - run:
+          name: Installing git
+          command: 'sudo apt-get install -y git'
+      - run:
+          name: Building
+          command: 'cmake -H. -Bbuild && cmake --build build'
+      - run:
+          name: Run
+          command: './bin/moros -v'
