@@ -19,7 +19,7 @@ execute_process(
 )
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/version.hpp
-    "const char* version = \"${PROJ_VERSION}\";"
+    "const char* version = __DATE__ \" ${PROJ_VERSION}\";"
 )
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
