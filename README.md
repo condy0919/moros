@@ -1,6 +1,6 @@
 # moros
 
-moros is a modern HTTP benchmark tools capable of generating significant load even when using single thread.
+moros is a modern HTTP benchmark tool capable of generating significant load even when using single thread.
 
 An optional plugin(using `shared library`) can perform HTTP request generating, response processing and more on.
 
