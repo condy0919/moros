@@ -13,9 +13,8 @@
 namespace moros {
 
 class Bencher {
-    friend class Connection;
 public:
-    Bencher(struct addrinfo addr, std::size_t nconn);
+    Bencher(struct addrinfo addr, std::size_t nconn, const std::string& req);
 
     void run() noexcept;
     void stop() noexcept;
@@ -30,7 +29,7 @@ private:
 
 class Connection : public std::enable_shared_from_this<Connection> {
 public:
-    Connection(EventLoop& ev_loop, Bencher& b) noexcept;
+    Connection(EventLoop& ev_loop, Bencher& b, const std::string& req);
 
     void reconnect();
     void connect();

@@ -7,6 +7,7 @@
 #include <memory>
 #include <iostream>
 #include <thread>
+#include <boost/format.hpp>
 #include <boost/program_options.hpp>
 
 #include <sys/types.h>
@@ -69,14 +70,57 @@ int main(int argc, char* argv[]) {
     }
 
     const std::string schema = cfg.url.substr(parts.field_data[UF_SCHEMA].off,
-                                              parts.field_data[UF_SCHEMA].len);
-    const std::string host = cfg.url.substr(parts.field_data[UF_HOST].off,
-                                            parts.field_data[UF_HOST].len);
-    const std::string port = (parts.field_set & (1 << UF_PORT))
+                                              parts.field_data[UF_SCHEMA].len),
+
+                      host = cfg.url.substr(parts.field_data[UF_HOST].off,
+                                            parts.field_data[UF_HOST].len),
+
+                      port = (parts.field_set & (1 << UF_PORT))
                                  ? cfg.url.substr(parts.field_data[UF_PORT].off,
                                                   parts.field_data[UF_PORT].len)
-                                 : "";
-    const std::string service = !port.empty() ? port : schema;
+                                 : "",
+
+                      service = !port.empty() ? port : schema,
+
+                      path = (parts.field_set & (1 << UF_PATH))
+                                 ? cfg.url.substr(parts.field_data[UF_PATH].off,
+                                                  parts.field_data[UF_PATH].len)
+                                 : "/",
+
+                      query_string =
+                          (parts.field_set & (1 << UF_QUERY))
+                              ? cfg.url.substr(parts.field_data[UF_QUERY].off,
+                                               parts.field_data[UF_QUERY].len)
+                              : "";
+
+    const std::string http_req = ({
+        const auto iter = std::find_if(
+            cfg.headers.begin(), cfg.headers.end(), [](const std::string& s) {
+                return (s.size() <= 5)
+                           ? false
+                           : ::strncasecmp(s.c_str(), "Host:", 5) == 0;
+            });
+
+        const std::string uri =
+            path + (query_string.empty() ? "" : "?") + query_string;
+
+        std::string req;
+        if (iter == cfg.headers.end()) {
+            req = str(boost::format("GET %1% HTTP/1.1\r\n"
+                                    "Host: %2%\r\n") %
+                      uri % host);
+        } else {
+            req = str(boost::format("GET %1% HTTP/1.1\r\n") % uri);
+        }
+
+        for (const auto& header : cfg.headers) {
+            req.append(header);
+            req.append("\r\n");
+        }
+        req.append("\r\n");
+
+        req;
+    });
 
     const struct addrinfo hints = {
         .ai_flags = 0,
@@ -92,7 +136,7 @@ int main(int argc, char* argv[]) {
     struct addrinfo* result = nullptr;
     int ret = ::getaddrinfo(host.c_str(), service.c_str(), &hints, &result);
     if (ret != 0) {
-        std::cerr << "resolve " << host << " failed: " << gai_strerror(ret) << '\n';
+        std::cerr << "resolve " << host << " failed: " << ::gai_strerror(ret) << '\n';
         return -2;
     }
 
@@ -101,7 +145,7 @@ int main(int argc, char* argv[]) {
 
 
     for (std::size_t i = 0; i < cfg.threads; ++i) {
-        benchers.emplace_back(*rptr, cfg.connections);
+        benchers.emplace_back(*rptr, cfg.connections, http_req);
     }
 
     std::vector<std::thread> thread_group;
