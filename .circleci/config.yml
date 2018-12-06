@@ -4,8 +4,8 @@ jobs:
   build:
     branches:
       only:
-        - master
         - dev
+        - master
     docker:
       - image: "debian:sid"
     steps:
@@ -14,8 +14,8 @@ jobs:
           name: Updating
           command: 'apt-get update'
       - run:
-          name: Installing sudo
-          command: 'apt-get install -y sudo'
+          name: Installing git
+          command: 'apt-get install -y git'
       - run:
           name: Installing gcc
           command: 'apt-get install -y gcc g++'
@@ -24,10 +24,10 @@ jobs:
           command: 'apt-get install -y libboost-all-dev'
       - run:
           name: Installing cmake
-          command: 'sudo apt-get install -y cmake'
+          command: 'apt-get install -y cmake'
       - run:
-          name: Installing git
-          command: 'sudo apt-get install -y git'
+          name: Fetch submodules
+          command: git submodule update --init --recursive
       - run:
           name: Building
           command: 'cmake -H. -Bbuild && cmake --build build'
