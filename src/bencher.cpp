@@ -10,10 +10,11 @@
 
 namespace moros {
 
-Bencher::Bencher(struct addrinfo addr, std::size_t nconn)
+Bencher::Bencher(struct addrinfo addr, std::size_t nconn,
+                 const std::string& req)
     : ev_loop_(nconn), addr_(addr) {
     for (std::size_t i = 0; i < nconn; ++i) {
-        auto c = std::make_shared<Connection>(ev_loop_, *this);
+        auto c = std::make_shared<Connection>(ev_loop_, *this, req);
         c->connect();
     }
 }
@@ -30,8 +31,8 @@ const struct addrinfo& Bencher::addr() const noexcept {
     return addr_;
 }
 
-Connection::Connection(EventLoop& ev_loop, Bencher& b) noexcept
-    : ev_loop_(ev_loop), bencher_(b) {
+Connection::Connection(EventLoop& ev_loop, Bencher& b, const std::string& req)
+    : ev_loop_(ev_loop), bencher_(b), req_(req) {
     http_parser_init(&parser_, HTTP_RESPONSE);
     parser_.data = this;
 
@@ -107,9 +108,7 @@ void Connection::connect() {
 
 void Connection::request() {
     if (written_ == 0) {
-        req_ = "GET /a.zip HTTP/1.1\r\n"
-               "Host: www.qq.com\r\n"
-               "\r\n";
+        // TODO dynamic request
     }
 
     while (written_ < req_.size()) {
