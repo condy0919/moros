@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 2.6)
 
 project(moros)
 
+enable_testing()
+
 include(ExternalProject)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${moros_SOURCE_DIR}/bin)
 
 add_custom_target(third_party)
 ExternalProject_Add(
@@ -22,3 +24,4 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/http-parser)
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/http-parser)
 
 add_subdirectory(src)
+add_subdirectory(tests)
