@@ -185,7 +185,7 @@ public:
             return -1;
         }
 
-        return addEvent(fd, Mask::READABLE, [&, fd, cb] {
+        return addEvent(fd, Mask::READABLE, [&, fd, cb=std::move(cb)] {
                     std::uint64_t e;
                     ::read(fd, &e, sizeof(e));
 
