@@ -12,25 +12,28 @@ jobs:
       - checkout
       - run:
           name: Updating
-          command: 'apt-get update'
+          command: apt-get update
       - run:
           name: Installing git
-          command: 'apt-get install -y git'
+          command: apt-get install -y git
       - run:
           name: Installing gcc
-          command: 'apt-get install -y gcc g++'
+          command: apt-get install -y gcc g++
       - run:
           name: Installing libboost
-          command: 'apt-get install -y libboost-all-dev'
+          command: apt-get install -y libboost-all-dev
       - run:
           name: Installing cmake
-          command: 'apt-get install -y cmake'
+          command: apt-get install -y cmake
       - run:
           name: Fetch submodules
           command: git submodule update --init --recursive
       - run:
           name: Building
-          command: 'cmake -H. -Bbuild && cmake --build build'
+          command: cmake -H. -Bbuild && cmake --build build
+      - run:
+          name: Testing
+          command: (cd build; ctest)
       - run:
           name: Run
-          command: './bin/moros -v'
+          command: ./bin/moros -v
