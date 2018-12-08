@@ -21,7 +21,7 @@ std::string numfmt(std::chrono::minutes m) {
                    ? str(boost::format("%1% %2%m") % numfmt(hours) % m.count())
                    : numfmt(hours);
     }
-    return str(boost::format("%1%min") % m.count());
+    return str(boost::format("%1%m") % m.count());
 }
 
 std::string numfmt(std::chrono::seconds s) {

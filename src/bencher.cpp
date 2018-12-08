@@ -1,4 +1,5 @@
 #include "bencher.hpp"
+#include "stats.hpp"
 #include <boost/scope_exit.hpp>
 
 #include <fcntl.h>
@@ -7,6 +8,8 @@
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 
+extern std::unique_ptr<moros::Stats> requests;
+extern std::unique_ptr<moros::Stats> latency;
 
 namespace moros {
 
@@ -17,6 +20,21 @@ Bencher::Bencher(struct addrinfo addr, std::size_t nconn,
         auto c = std::make_shared<Connection>(ev_loop_, *this, req);
         c->connect();
     }
+
+    start_ = std::chrono::steady_clock::now();
+    requests_ = 0;
+    ev_loop_.addTimeEvent(std::chrono::milliseconds(100), [this]() {
+        if (requests_ > 0) {
+            const auto elapsed =
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - start_);
+            const double qps = 1000.0 * requests_ / elapsed.count();
+            requests->record(qps);
+
+            requests_ = 0;
+            start_ = std::chrono::steady_clock::now();
+        }
+    });
 }
 
 void Bencher::run() noexcept {
@@ -31,6 +49,10 @@ const struct addrinfo& Bencher::addr() const noexcept {
     return addr_;
 }
 
+void Bencher::countReq() noexcept {
+    ++requests_;
+}
+
 Connection::Connection(EventLoop& ev_loop, Bencher& b, const std::string& req)
     : ev_loop_(ev_loop), bencher_(b), req_(req) {
     http_parser_init(&parser_, HTTP_RESPONSE);
@@ -42,11 +64,19 @@ Connection::Connection(EventLoop& ev_loop, Bencher& b, const std::string& req)
 
         const unsigned status = parser->status_code;
 
-        // complete++
+        Metrics::getInstance().count(Metrics::Kind::COMPLETES);
+        c->bencher_.countReq();
 
-        // 错误码统计
+        if (status > 399) {
+            Metrics::getInstance().count(Metrics::Kind::ESTATUS);
+        }
 
-        // 超时统计
+        const auto elapsed =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - c->start_);
+        if (!latency->record(elapsed.count())) {
+            Metrics::getInstance().count(Metrics::Kind::ETIMEOUT);
+        }
 
         if (!http_should_keep_alive(parser)) {
             c->reconnect();
@@ -71,9 +101,9 @@ void Connection::reconnect() {
 
 void Connection::connect() {
     bool dismiss = false;
-    BOOST_SCOPE_EXIT_ALL(&, this) {
+    BOOST_SCOPE_EXIT_ALL(&) {
         if (!dismiss) {
-            // TODO 统计 connect 失败
+            Metrics::getInstance().count(Metrics::Kind::ECONNECT);
         }
     };
 
@@ -109,6 +139,8 @@ void Connection::connect() {
 void Connection::request() {
     if (written_ == 0) {
         // TODO dynamic request
+
+        start_ = std::chrono::steady_clock::now();
     }
 
     while (written_ < req_.size()) {
@@ -121,31 +153,31 @@ void Connection::request() {
         } else if (errno == EAGAIN) {
             break;
         } else {
-            // TODO
-            // reconnect
-            exit(2);
+            Metrics::getInstance().count(Metrics::Kind::EWRITE);
+            reconnect();
         }
     }
 }
 
 void Connection::response() {
-    // TODO 统计读取字节数
-
     ssize_t n = 0;
     while ((n = ::read(fd_, buf_, sizeof(buf_))) > 0) {
+        Metrics::getInstance().count(Metrics::Kind::BYTES, n);
+
         if (http_parser_execute(&parser_, &parser_settings_, buf_, n) != static_cast<std::size_t>(n)) {
-            // error
-            // reconnect
+            Metrics::getInstance().count(Metrics::Kind::EREAD);
+            reconnect();
         }
     }
 
     if (n == 0) {
         if (!http_body_is_final(&parser_)) {
-            // error
+            Metrics::getInstance().count(Metrics::Kind::EREAD);
         }
         reconnect();
-    } else {
-
+    } else if (errno != EAGAIN) {
+        Metrics::getInstance().count(Metrics::Kind::EREAD);
+        reconnect();
     }
 }
 
