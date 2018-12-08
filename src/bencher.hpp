@@ -21,10 +21,15 @@ public:
 
     const struct addrinfo& addr() const noexcept;
 
+    void countReq() noexcept;
+
 private:
     EventLoop ev_loop_;
 
     struct addrinfo addr_;
+
+    std::chrono::steady_clock::time_point start_;
+    std::uint64_t requests_;
 };
 
 class Connection : public std::enable_shared_from_this<Connection> {
@@ -46,12 +51,12 @@ private:
 
     int fd_ = -1;
 
-    std::chrono::steady_clock::time_point start_;
-    
     std::string req_;
     std::size_t written_;
 
     char buf_[8192];
+
+    std::chrono::steady_clock::time_point start_;
 };
 
 }
