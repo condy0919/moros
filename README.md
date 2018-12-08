@@ -7,7 +7,7 @@ An optional plugin(using `shared library`) can perform HTTP request generating, 
 ## basic
 
 ```bash
-moros http://example.org:8080/a.zip
+moros http://localhost/a.zip
 ```
 
 This runs  a benchmark with the following default setting:
@@ -17,6 +17,19 @@ threads:        1
 connections:    10
 duration:       10s
 timeout:        2s
+```
+
+Output:
+
+```
+Running 10s test @ http://localhost/a.zip
+  1 thread(s) and 10 connection(s) each
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency      0ms        0ms     5ms     99.9979%
+    Req/Sec   46.53K      3.23K  51.17K          61%
+  473743 requests in 10s, 3.72GB read
+Requests/sec: 47374.3
+Transfer/sec: 380.56MB
 ```
 
 ## command line options
@@ -36,7 +49,7 @@ Make sure file descriptors is enough. Use `ulimit -n unlimited`to handle this.
 
 ## todo
 
-- [ ] statistic stat
+- [x] statistic stat
 - [ ] https support
 - [ ] plugin support
 
