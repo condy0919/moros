@@ -72,7 +72,7 @@ double Stats::inStdevPercent(double m, double sev, std::size_t n) const noexcept
 }
 
 std::uint64_t Stats::derank(double p) const noexcept {
-    const std::size_t rank = std::ceil(p * count_);
+    const std::uint64_t rank = std::ceil(p * count_);
 
     std::uint64_t total = 0;
     for (std::uint64_t i = min_; i <= max_; ++i) {

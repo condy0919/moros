@@ -167,6 +167,7 @@ void Connection::response() {
         if (http_parser_execute(&parser_, &parser_settings_, buf_, n) != static_cast<std::size_t>(n)) {
             Metrics::getInstance().count(Metrics::Kind::EREAD);
             reconnect();
+            return;
         }
     }
 
