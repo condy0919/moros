@@ -50,6 +50,8 @@ Make sure file descriptors is enough. Use `ulimit -n unlimited`to handle this.
 ## todo
 
 - [x] statistic stat
+- [ ] follow 302 setting
+- [ ] constant benchmark rate
 - [ ] https support
 - [ ] plugin support
 
