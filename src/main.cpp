@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <chrono>
 #include <thread>
+#include <list>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 
@@ -25,7 +26,7 @@ std::unique_ptr<moros::Stats> requests, latency;
 
 static moros::Config cfg;
 
-static std::vector<moros::Bencher> benchers;
+static std::list<moros::Bencher> benchers;
 
 int main(int argc, char* argv[]) {
     std::signal(SIGINT, [](int sig) {
@@ -159,13 +160,9 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<std::thread> thread_group;
-    for (std::size_t i = 0; i < cfg.threads; ++i) {
-        auto& bencher = benchers[i];
-
-        thread_group.emplace_back([&]() {
-            bencher.run();
-        });
-    }
+    std::for_each(benchers.begin(), benchers.end(), [&](auto& b) {
+        thread_group.emplace_back([&]() { b.run(); });
+    });
 
     const auto bench_start = std::chrono::steady_clock::now();
 

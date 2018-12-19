@@ -214,7 +214,9 @@ public:
             if ((ev.events & EPOLLIN) || (ev.events & EPOLLERR) || (ev.events & EPOLLHUP)) {
                 iter->second.onRead();
             }
-            if (ev.events & EPOLLOUT) {
+
+            // fd not closed by read error
+            if ((evs_.find(ev.data.fd) != evs_.end()) && (ev.events & EPOLLOUT)) {
                 iter->second.onWrite();
             }
         }

@@ -17,7 +17,8 @@ bool Stats::record(std::uint64_t n) noexcept {
     __atomic_add_fetch(&count_, 1, __ATOMIC_RELAXED);
     __atomic_add_fetch(&xs_[n], 1, __ATOMIC_RELAXED);
 
-    std::uint64_t min = min_, max = max_;
+    std::uint64_t min = __atomic_load_n(&min_, __ATOMIC_RELAXED),
+                  max = __atomic_load_n(&max_, __ATOMIC_RELAXED);
     while (n < min &&
            !__atomic_compare_exchange_n(&min_, &min, n, true, __ATOMIC_ACQ_REL,
                                         __ATOMIC_ACQUIRE)) {
