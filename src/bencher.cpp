@@ -116,6 +116,7 @@ void Connection::connect() {
 
     if (::connect(fd, bencher_.addr().ai_addr, bencher_.addr().ai_addrlen) == -1) {
         if (errno != EINPROGRESS) {
+            ::close(fd);
             return;
         }
     }
