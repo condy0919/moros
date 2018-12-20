@@ -1,3 +1,7 @@
+|CI          |Host OS    |Build Status|
+|------------|-----------|------------|
+|**CircleCi**|Debian 7   |[![CircleCI](https://circleci.com/gh/condy0919/moros.svg?style=svg)](https://circleci.com/gh/condy0919/moros)|
+
 # moros
 
 moros is a modern HTTP benchmark tool capable of generating significant load even when using single thread.
