@@ -43,7 +43,7 @@ Transfer/sec: 380.56MB
 -t, --threads:      The number of HTTP benchers
 -c, --connections:  The number of HTTP connections per bencher
 -d, --duration:     Duration of the benchmark
--o, --timeout:      Mark HTTP request timeouted if HTTP response is not
+-T, --timeout:      Mark HTTP request timeouted if HTTP response is not
                     received within this amount of time
 ```
 

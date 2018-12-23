@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
         ("threads,t", po::value<std::size_t>(&cfg.threads)->default_value(1), "The number of HTTP benchers")
         ("connections,c", po::value<std::size_t>(&cfg.connections)->default_value(10), "The number of HTTP connections per bencher")
         ("duration,d", po::value<std::chrono::seconds>(&cfg.duration)->default_value(std::chrono::seconds(10)), "Duration of bench")
-        ("timeout,o", po::value<std::chrono::seconds>(&cfg.timeout)->default_value(std::chrono::seconds(2)), "Mark HTTP Request timeouted if HTTP Response is not received within this amount of time")
+        ("timeout,T", po::value<std::chrono::seconds>(&cfg.timeout)->default_value(std::chrono::seconds(2)), "Mark HTTP Request timeouted if HTTP Response is not received within this amount of time")
         ("latency,l", "Print latency distribution")
         ;
 
