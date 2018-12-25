@@ -1,4 +1,5 @@
 #include "config.hpp"
+#include "ssl.hpp"
 #include "bencher.hpp"
 #include "version.hpp"
 #include "stdhack.hpp"
@@ -25,7 +26,7 @@ namespace po = boost::program_options;
 std::unique_ptr<moros::Stats> requests, latency;
 
 static moros::Config cfg;
-
+static moros::SslContext ssl_ctx;
 static std::list<moros::Bencher> benchers;
 
 int main(int argc, char* argv[]) {
@@ -109,7 +110,7 @@ int main(int argc, char* argv[]) {
             cfg.headers.begin(), cfg.headers.end(), [](const std::string& s) {
                 return (s.size() <= 5)
                            ? false
-                           : ::strncasecmp(s.c_str(), "Host:", 5) == 0;
+                           : ::strncasecmp(s.c_str(), "Host", 4) == 0;
             });
 
         const std::string uri =
@@ -132,6 +133,8 @@ int main(int argc, char* argv[]) {
 
         req;
     });
+
+    const bool using_https = ::strncasecmp(schema.c_str(), "https", 5) == 0;
 
     const struct addrinfo hints = {
         .ai_flags = 0,
@@ -156,7 +159,8 @@ int main(int argc, char* argv[]) {
 
 
     for (std::size_t i = 0; i < cfg.threads; ++i) {
-        benchers.emplace_back(*rptr, cfg.connections, http_req);
+        benchers.emplace_back(*rptr, cfg.connections, host, http_req,
+                              using_https ? &ssl_ctx : nullptr);
     }
 
     std::vector<std::thread> thread_group;

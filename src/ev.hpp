@@ -215,7 +215,7 @@ public:
                 iter->second.onRead();
             }
 
-            // fd not closed by read error
+            // fd not closed by read
             if ((evs_.find(ev.data.fd) != evs_.end()) && (ev.events & EPOLLOUT)) {
                 iter->second.onWrite();
             }
