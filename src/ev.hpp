@@ -216,8 +216,11 @@ public:
             }
 
             // fd not closed by read
-            if ((evs_.find(ev.data.fd) != evs_.end()) && (ev.events & EPOLLOUT)) {
-                iter->second.onWrite();
+            if (ev.events & EPOLLOUT) {
+                const auto ii = evs_.find(ev.data.fd);
+                if (ii != evs_.end()) {
+                    ii->second.onWrite();
+                }
             }
         }
     }
