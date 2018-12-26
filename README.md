@@ -60,7 +60,9 @@ yay -S moros-git
 ```
 
 The other can build from source.
+
 `moros`depends on`boost.program_options`and`openssl`library.
+
 Install these two packages first.
 ```bash
 git clone https://github.com/condy0919/moros
