@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
         std::chrono::steady_clock::now() - bench_start);
 
     // benchmark result
-    std::cerr << "  Thread Stats   Avg      Stdev     Max   +/- Stdev\n";
+    std::cerr << "  Thread Stats   Avg      Stdev      Max   +/- Stdev\n";
     const auto print_stats = [](std::string name, const moros::Stats& st, auto fn) {
         const double mean = st.mean();
         const double stdev = st.stdev(mean);
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "    " << name
                   << std::setw(9) << moros::numfmt(fn(mean))
                   << std::setw(11) << moros::numfmt(fn(stdev))
-                  << std::setw(8) << moros::numfmt(fn(max))
+                  << std::setw(9) << moros::numfmt(fn(max))
                   << std::setw(12) << p << "%\n";
     };
     print_stats("Latency", *latency, [](auto x) {
@@ -231,7 +231,7 @@ int main(int argc, char* argv[]) {
         moros::Metrics::getInstance()[moros::Metrics::Kind::EWRITE] ||
         moros::Metrics::getInstance()[moros::Metrics::Kind::ETIMEOUT]) {
         std::cerr << "  Socket errors:"
-                  << "connect " << moros::Metrics::getInstance()[moros::Metrics::Kind::ECONNECT]
+                  << " connect " << moros::Metrics::getInstance()[moros::Metrics::Kind::ECONNECT]
                   << ", read " << moros::Metrics::getInstance()[moros::Metrics::Kind::EREAD]
                   << ", write " << moros::Metrics::getInstance()[moros::Metrics::Kind::EWRITE]
                   << ", timeout " << moros::Metrics::getInstance()[moros::Metrics::Kind::ETIMEOUT]
