@@ -6,6 +6,7 @@ jobs:
       only:
         - dev
         - master
+        - ci
     docker:
       - image: "debian:sid"
     steps:
@@ -14,17 +15,8 @@ jobs:
           name: Updating
           command: apt-get update
       - run:
-          name: Installing git
-          command: apt-get install -y git
-      - run:
-          name: Installing gcc
-          command: apt-get install -y gcc g++
-      - run:
-          name: Installing libboost
-          command: apt-get install -y libboost-all-dev
-      - run:
-          name: Installing cmake
-          command: apt-get install -y cmake
+          name: Installing git, gcc, g++, boost, cmake, openssl
+          command: apt-get install -y git gcc g++ libboost-all-dev cmake openssl libssl-dev
       - run:
           name: Fetch submodules
           command: git submodule update --init --recursive
