@@ -45,18 +45,39 @@ Transfer/sec: 380.56MB
 -d, --duration:     Duration of the benchmark
 -T, --timeout:      Mark HTTP request timeouted if HTTP response is not
                     received within this amount of time
+-l, --latency:      Print latency distribution
 ```
 
 ## tips
 
 Make sure file descriptors is enough. Use `ulimit -n unlimited`to handle this.
 
+## installl
+
+Arch Linux
+```bash
+yay -S moros-git
+```
+
+The others can build from source.
+`moros`depends on`boost.program_options`and`openssl`library.
+Install these two packages first.
+```bash
+git clone https://github.com/condy0919/moros
+git submodule update --init --recursive # nodejs/http-parser
+
+cd moros
+cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
+The moros binary will be placed in `moros/bin/`.
+
 ## todo
 
 - [x] statistic stat
 - [ ] follow 302 setting
 - [ ] constant benchmark rate
-- [ ] https support
+- [x] https support
 - [ ] plugin support
 
 
