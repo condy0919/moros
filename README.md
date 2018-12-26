@@ -59,14 +59,15 @@ Arch Linux
 yay -S moros-git
 ```
 
-The others can build from source.
+The other can build from source.
 `moros`depends on`boost.program_options`and`openssl`library.
 Install these two packages first.
 ```bash
 git clone https://github.com/condy0919/moros
-git submodule update --init --recursive # nodejs/http-parser
 
 cd moros
+git submodule update --init --recursive # nodejs/http-parser
+
 cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
