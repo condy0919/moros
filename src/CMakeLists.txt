@@ -9,6 +9,7 @@ add_definitions(-g -ggdb)
 find_package(Threads REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options)
 find_package(Git REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # generate version file
 execute_process(
@@ -27,6 +28,7 @@ file(GLOB MOROS_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/stdhack.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/stats.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/bencher.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ssl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
@@ -37,5 +39,6 @@ add_dependencies(moros third_party)
 target_link_libraries(moros
     ${CMAKE_THREAD_LIBS_INIT}
     ${Boost_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
     libhttp_parser.a
 )

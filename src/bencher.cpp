@@ -13,11 +13,13 @@ extern std::unique_ptr<moros::Stats> latency;
 
 namespace moros {
 
-Bencher::Bencher(struct addrinfo addr, std::size_t nconn,
-                 const std::string& req)
+Bencher::Bencher(struct addrinfo addr, std::size_t nconn, const std::string& host,
+                 const std::string& req, const SslContext* ssl_ctx)
     : ev_loop_(nconn), addr_(addr) {
     for (std::size_t i = 0; i < nconn; ++i) {
-        auto c = std::make_shared<Connection>(ev_loop_, *this, req);
+        std::shared_ptr<Connection> c =
+            ssl_ctx ? std::make_shared<SslConnection>(ev_loop_, *this, host, req, Ssl(*ssl_ctx))
+                    : std::make_shared<Connection>(ev_loop_, *this, host, req, Ssl());
         c->connect();
     }
 
@@ -53,8 +55,9 @@ void Bencher::countReq() noexcept {
     ++requests_;
 }
 
-Connection::Connection(EventLoop& ev_loop, Bencher& b, const std::string& req)
-    : ev_loop_(ev_loop), bencher_(b), req_(req) {
+Connection::Connection(EventLoop& ev_loop, Bencher& b, const std::string& host,
+                       const std::string& req, Ssl ssl)
+    : ev_loop_(ev_loop), bencher_(b), ssl_(std::move(ssl)), host_(host), req_(req) {
     http_parser_init(&parser_, HTTP_RESPONSE);
     parser_.data = this;
 
@@ -95,6 +98,7 @@ void Connection::reconnect() {
 
     ev_loop_.delEvent(fd_, Mask::READABLE | Mask::WRITABLE);
 
+    close();
     ::close(fd_);
     connect();
 }
@@ -125,7 +129,7 @@ void Connection::connect() {
     ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &flags, sizeof(flags));
 
     auto self = shared_from_this();
-    if (!ev_loop_.addEvent(fd, Mask::WRITABLE, [self] { self->request(); }) ||
+    if (!ev_loop_.addEvent(fd, Mask::WRITABLE, [self] { self->connected(); }) ||
         !ev_loop_.addEvent(fd, Mask::READABLE, [self] { self->response(); })) {
         return;
     }
@@ -135,6 +139,15 @@ void Connection::connect() {
     fd_ = fd;
     written_ = 0;
     http_parser_init(&parser_, HTTP_RESPONSE);
+}
+
+void Connection::connected() {
+    auto self = shared_from_this();
+    if (!ev_loop_.addEvent(fd_, Mask::WRITABLE, [self] { self->request(); })) {
+        return;
+    }
+
+    request();
 }
 
 void Connection::request() {
@@ -148,7 +161,7 @@ void Connection::request() {
         const char* buf = req_.data() + written_;
         const std::size_t len = req_.size() - written_;
 
-        const ssize_t n = ::write(fd_, buf, len);
+        const ssize_t n = write(buf, len);
         if (n >= 0) {
             written_ += static_cast<std::size_t>(n);
         } else if (errno == EAGAIN) {
@@ -162,7 +175,7 @@ void Connection::request() {
 
 void Connection::response() {
     ssize_t n = 0;
-    while ((n = ::read(fd_, buf_, sizeof(buf_))) > 0) {
+    while ((n = read(buf_, sizeof(buf_))) > 0) {
         Metrics::getInstance().count(Metrics::Kind::BYTES, n);
 
         if (http_parser_execute(&parser_, &parser_settings_, buf_, n) != static_cast<std::size_t>(n)) {
@@ -181,6 +194,41 @@ void Connection::response() {
         Metrics::getInstance().count(Metrics::Kind::EREAD);
         reconnect();
     }
+}
+
+int Connection::read(char buf[], std::size_t len) noexcept {
+    return ::read(fd_, buf, len);
+}
+
+int Connection::write(const char buf[], std::size_t len) noexcept {
+    return ::write(fd_, buf, len);
+}
+
+int Connection::close() noexcept {
+    return 0;
+}
+
+void SslConnection::connected() {
+    auto self = shared_from_this();
+    if (!ev_loop_.addEvent(fd_, Mask::WRITABLE, [self]() { self->request(); })) {
+        return;
+    }
+
+    ssl_.fd(fd_);
+    ssl_.sni(host_.c_str());
+    ssl_.connect();
+}
+
+int SslConnection::read(char buf[], std::size_t len) noexcept {
+    return ssl_.read(buf, len);
+}
+
+int SslConnection::write(const char buf[], std::size_t len) noexcept {
+    return ssl_.write(buf, len);
+}
+
+int SslConnection::close() noexcept {
+    return ssl_.close();
 }
 
 }
