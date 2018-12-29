@@ -78,7 +78,6 @@ The moros binary will be placed in `moros/bin/`.
 ## todo
 
 - [x] statistic stat
-- [ ] follow 302 setting
 - [ ] constant benchmark rate
 - [x] https support
 - [ ] plugin support
