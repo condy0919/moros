@@ -14,6 +14,7 @@ struct Config {
     std::chrono::seconds duration;
     std::chrono::seconds timeout;
     std::string url;
+    std::string plugin;
     std::vector<std::string> headers;
     bool display_latency;
 };

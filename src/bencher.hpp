@@ -3,6 +3,7 @@
 
 #include "ev.hpp"
 #include "ssl.hpp"
+#include "plugin.hpp"
 #include "http_parser.h"
 #include <chrono>
 #include <string>
@@ -15,7 +16,7 @@ namespace moros {
 class Bencher {
 public:
     Bencher(struct addrinfo addr, std::size_t nconn, const std::string& host,
-            const std::string& req, const SslContext* ssl_ctx);
+            const std::string& req, const SslContext* ssl_ctx, Plugin& plugin);
 
     void run() noexcept;
     void stop() noexcept;
@@ -24,10 +25,14 @@ public:
 
     void countReq() noexcept;
 
+    void summary();
+
 private:
     EventLoop ev_loop_;
 
     struct addrinfo addr_;
+
+    Plugin& plugin_;
 
     std::chrono::steady_clock::time_point start_;
     std::uint64_t requests_;
@@ -36,7 +41,7 @@ private:
 class Connection : public std::enable_shared_from_this<Connection> {
 public:
     Connection(EventLoop& ev_loop, Bencher& b, const std::string& host,
-               const std::string& req, Ssl ssl);
+               const std::string& req, Ssl ssl, Plugin& plugin);
 
     void connect();
     void reconnect();
@@ -58,6 +63,13 @@ protected:
     http_parser parser_;
     http_parser_settings parser_settings_;
 
+    enum class HeaderState {
+        FIELD,
+        VALUE,
+    } header_state_ = HeaderState::FIELD;
+    std::string body_;
+    std::string headers_;
+
     int fd_ = -1;
     Ssl ssl_;
 
@@ -69,6 +81,8 @@ protected:
     char buf_[8192];
 
     std::chrono::steady_clock::time_point start_;
+
+    Plugin& plugin_;
 };
 
 class SslConnection : public Connection {

@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 2.6)
-
 add_definitions(-std=c++14)
 add_definitions(-pipe)
 add_definitions(-Wall)
@@ -29,6 +27,7 @@ file(GLOB MOROS_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/stats.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/bencher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ssl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/plugin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
@@ -40,5 +39,6 @@ target_link_libraries(moros
     ${CMAKE_THREAD_LIBS_INIT}
     ${Boost_LIBRARIES}
     ${OPENSSL_LIBRARIES}
+    ${CMAKE_DL_LIBS}
     libhttp_parser.a
 )

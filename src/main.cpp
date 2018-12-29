@@ -1,5 +1,6 @@
 #include "config.hpp"
 #include "ssl.hpp"
+#include "plugin.hpp"
 #include "bencher.hpp"
 #include "version.hpp"
 #include "stdhack.hpp"
@@ -44,6 +45,7 @@ int main(int argc, char* argv[]) {
         ("help,h", "Produce help message")
         ("version,v", "Print version details")
         ("url,u", po::value<std::string>(&cfg.url), "HTTP url")
+        ("plugin,p", po::value<std::string>(&cfg.plugin), "Load plugin")
         ("header,H", po::value<std::vector<std::string>>(&cfg.headers), "HTTP header")
         ("threads,t", po::value<std::size_t>(&cfg.threads)->default_value(1), "The number of HTTP benchers")
         ("connections,c", po::value<std::size_t>(&cfg.connections)->default_value(10), "The number of HTTP connections per bencher")
@@ -136,6 +138,13 @@ int main(int argc, char* argv[]) {
 
     const bool using_https = ::strncasecmp(schema.c_str(), "https", 5) == 0;
 
+    auto plugin =
+        moros::Plugin(schema, host, port, service, query_string, cfg.headers);
+    if (!cfg.plugin.empty()) {
+        plugin.load(cfg.plugin);
+    }
+    plugin.setup();
+
     const struct addrinfo hints = {
         .ai_flags = 0,
         .ai_family = AF_UNSPEC,
@@ -157,15 +166,17 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<struct addrinfo, void (*)(struct addrinfo*)> rptr(
         result, ::freeaddrinfo);
 
-
     for (std::size_t i = 0; i < cfg.threads; ++i) {
         benchers.emplace_back(*rptr, cfg.connections, host, http_req,
-                              using_https ? &ssl_ctx : nullptr);
+                              using_https ? &ssl_ctx : nullptr, plugin);
     }
 
     std::vector<std::thread> thread_group;
     std::for_each(benchers.begin(), benchers.end(), [&](auto& b) {
-        thread_group.emplace_back([&]() { b.run(); });
+        thread_group.emplace_back([&]() {
+            b.run();
+            b.summary();
+        });
     });
 
     const auto bench_start = std::chrono::steady_clock::now();
