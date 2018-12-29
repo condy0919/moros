@@ -91,7 +91,7 @@ void Plugin::response(std::uint32_t status, std::string headers, std::string bod
 
             hs[i++] = h;
         }
-        hs[std::min(i, HEADERS_MAX_SIZE)] = nullptr;
+        hs[std::min(i, +HEADERS_MAX_SIZE)] = nullptr;
 
         response_(status, hs, body.c_str(), body.size());
     }
