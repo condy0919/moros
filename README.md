@@ -95,6 +95,6 @@ In default, only status is valid. Making `want_response_headers` and `want_respo
 - [x] statistic stat
 - [ ] constant benchmark rate
 - [x] https support
-- [ ] plugin support
+- [x] plugin support
 
 

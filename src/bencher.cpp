@@ -13,13 +13,14 @@ extern std::unique_ptr<moros::Stats> latency;
 
 namespace moros {
 
-Bencher::Bencher(struct addrinfo addr, std::size_t nconn, const std::string& host,
-                 const std::string& req, const SslContext* ssl_ctx)
-    : ev_loop_(nconn), addr_(addr) {
+Bencher::Bencher(struct addrinfo addr, std::size_t nconn,
+                 const std::string& host, const std::string& req,
+                 const SslContext* ssl_ctx, Plugin& plugin)
+    : ev_loop_(nconn), addr_(addr), plugin_(plugin) {
     for (std::size_t i = 0; i < nconn; ++i) {
         std::shared_ptr<Connection> c =
-            ssl_ctx ? std::make_shared<SslConnection>(ev_loop_, *this, host, req, Ssl(*ssl_ctx))
-                    : std::make_shared<Connection>(ev_loop_, *this, host, req, Ssl());
+            ssl_ctx ? std::make_shared<SslConnection>(ev_loop_, *this, host, req, Ssl(*ssl_ctx), plugin)
+                    : std::make_shared<Connection>(ev_loop_, *this, host, req, Ssl(), plugin);
         c->connect();
     }
 
@@ -55,9 +56,18 @@ void Bencher::countReq() noexcept {
     ++requests_;
 }
 
+void Bencher::summary() {
+    plugin_.summary();
+}
+
 Connection::Connection(EventLoop& ev_loop, Bencher& b, const std::string& host,
-                       const std::string& req, Ssl ssl)
-    : ev_loop_(ev_loop), bencher_(b), ssl_(std::move(ssl)), host_(host), req_(req) {
+                       const std::string& req, Ssl ssl, Plugin& plugin)
+    : ev_loop_(ev_loop),
+      bencher_(b),
+      ssl_(std::move(ssl)),
+      host_(host),
+      req_(req),
+      plugin_(plugin) {
     http_parser_init(&parser_, HTTP_RESPONSE);
     parser_.data = this;
 
@@ -81,15 +91,58 @@ Connection::Connection(EventLoop& ev_loop, Bencher& b, const std::string& host,
             Metrics::getInstance().count(Metrics::Kind::ETIMEOUT);
         }
 
+        c->plugin_.response(status, std::move(c->headers_), std::move(c->body_));
+
         if (!http_should_keep_alive(parser)) {
             c->reconnect();
         } else {
             c->written_ = 0;
+            c->body_.clear();
+            c->headers_.clear();
+            c->header_state_ = HeaderState::FIELD;
             http_parser_init(parser, HTTP_RESPONSE);
         }
 
         return 0;
     };
+
+    if (plugin.wantResponseHeaders()) {
+        parser_settings_.on_header_field = [](http_parser* parser,
+                                              const char* s, std::size_t len) {
+            auto c = static_cast<Connection*>(parser->data);
+            if (c->header_state_ == HeaderState::VALUE) {
+                c->headers_.push_back('\x01');
+                c->header_state_ = HeaderState::FIELD;
+            }
+            c->headers_.append(s, len);
+
+            return 0;
+        };
+
+        parser_settings_.on_header_value = [](http_parser* parser,
+                                              const char* s, std::size_t len) {
+            auto c = static_cast<Connection*>(parser->data);
+            if (c->header_state_ == HeaderState::FIELD) {
+                c->headers_.push_back(':');
+                c->header_state_ = HeaderState::VALUE;
+            }
+            c->headers_.append(s, len);
+
+            return 0;
+        };
+    }
+
+    if (plugin.wantResponseBody()) {
+        parser_settings_.on_body = [](http_parser* parser, const char* s,
+                                      std::size_t len) {
+            auto c = static_cast<Connection*>(parser->data);
+            c->body_.append(s, len);
+
+            return 0;
+        };
+    }
+
+    plugin.init();
 }
 
 void Connection::reconnect() {
@@ -138,6 +191,9 @@ void Connection::connect() {
 
     fd_ = fd;
     written_ = 0;
+    body_.clear();
+    headers_.clear();
+    header_state_ = HeaderState::FIELD;
     http_parser_init(&parser_, HTTP_RESPONSE);
 }
 
@@ -152,7 +208,7 @@ void Connection::connected() {
 
 void Connection::request() {
     if (written_ == 0) {
-        // TODO dynamic request
+        plugin_.request(req_);
 
         start_ = std::chrono::steady_clock::now();
     }
