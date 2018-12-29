@@ -39,6 +39,7 @@ Transfer/sec: 380.56MB
 ## command line options
 
 ```
+-p, --plugin:       Load plugin
 -H, --Header:       HTTP header
 -t, --threads:      The number of HTTP benchers
 -c, --connections:  The number of HTTP connections per bencher
@@ -63,7 +64,7 @@ The other can build from source.
 
 `moros`depends on`boost.program_options`and`openssl`library.
 
-Install these two packages first.
+Install these 2 packages first.
 ```bash
 git clone https://github.com/condy0919/moros
 
@@ -73,7 +74,21 @@ git submodule update --init --recursive # nodejs/http-parser
 cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
-The moros binary will be placed in `moros/bin/`.
+The`moros`binary will be placed in `moros/bin/`.
+
+## plugin interface
+ - setup()
+ **setup** begins before the target address has been resolved and all benchers uninitialized.
+ - init()
+ **init** begins after each bencher initialized.
+ - request(schema, host, port, serivce, query\_string, headers[])
+ **request** generates a new HTTP request each time, which is expensive.
+Generating lots of HTTP requests one time and amortizing the cost is a good solution.
+ - response(status, headers[], body, body\_len)
+ **response** is called with HTTP response status, headers[], body.
+In default, only status is valid. Making `want_response_headers` and `want_response_body` symbols visible in plugin to process headers and body.
+ - summary()
+ **summary** can report some data collected in above functions.
 
 ## todo
 
