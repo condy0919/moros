@@ -38,6 +38,8 @@ Bencher::Bencher(struct addrinfo addr, std::size_t nconn,
             start_ = std::chrono::steady_clock::now();
         }
     });
+
+    plugin_.init();
 }
 
 void Bencher::run() noexcept {
@@ -141,8 +143,6 @@ Connection::Connection(EventLoop& ev_loop, Bencher& b, const std::string& host,
             return 0;
         };
     }
-
-    plugin.init();
 }
 
 void Connection::reconnect() {
