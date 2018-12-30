@@ -77,18 +77,33 @@ cmake --build build
 The`moros`binary will be placed in `moros/bin/`.
 
 ## plugin interface
- - setup()
- **setup** begins before the target address has been resolved and all benchers uninitialized.
- - init()
- **init** begins after each bencher initialized.
- - request(schema, host, port, serivce, query\_string, headers[])
- **request** generates a new HTTP request each time, which is expensive.
-Generating lots of HTTP requests one time and amortizing the cost is a good solution.
- - response(status, headers[], body, body\_len)
- **response** is called with HTTP response status, headers[], body.
-In default, only status is valid. Making `want_response_headers` and `want_response_body` symbols visible in plugin to process headers and body.
- - summary()
- **summary** can report some data collected in above functions.
+* **setup()**
+
+  _setup_ begins before the target address has been resolved and all benchers uninitialized.
+
+* **init()**
+
+  _init_ begins after each bencher initialized.
+
+* **request(schema, host, port, serivce, query\_string, headers[])**
+
+  _request_ generates a new HTTP request each time, which is expensive.
+
+  Generating lots of HTTP requests one time and amortizing the cost is a good solution.
+
+* **response(status, headers[], body, body\_len)**
+
+  _response_ is called with HTTP response status, headers[], body.
+
+  In default, only status is valid.
+
+  Making `want_response_headers` and `want_response_body` symbols
+
+  visible in plugin to process headers and body.
+
+* **summary()**
+
+  _summary_ can report some data collected in above functions.
 
 ## todo
 
@@ -96,5 +111,4 @@ In default, only status is valid. Making `want_response_headers` and `want_respo
 - [ ] constant benchmark rate
 - [x] https support
 - [x] plugin support
-
 
