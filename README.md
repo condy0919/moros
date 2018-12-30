@@ -8,7 +8,7 @@ moros is a modern HTTP benchmark tool capable of generating significant load eve
 
 An optional plugin(using `shared library`) can perform HTTP request generating, response processing and more on.
 
-## basic
+## Basic
 
 ```bash
 moros http://localhost/a.zip
@@ -36,7 +36,7 @@ Requests/sec: 47374.3
 Transfer/sec: 380.56MB
 ```
 
-## command line options
+## Command Line Options
 
 ```
 -p, --plugin:       Load plugin
@@ -49,11 +49,11 @@ Transfer/sec: 380.56MB
 -l, --latency:      Print latency distribution
 ```
 
-## tips
+## Tips
 
 Make sure file descriptors is enough. Use `ulimit -n unlimited`to handle this.
 
-## installl
+## Installation
 
 Arch Linux
 ```bash
@@ -76,7 +76,7 @@ cmake --build build
 ```
 The`moros`binary will be placed in `moros/bin/`.
 
-## plugin interface
+## Plugin Interface
 * **setup()**
 
   _setup_ begins before the target address has been resolved and all benchers uninitialized.
@@ -105,7 +105,7 @@ The`moros`binary will be placed in `moros/bin/`.
 
   _summary_ can report some data collected in above functions.
 
-## todo
+## Todo
 
 - [x] statistic stat
 - [ ] constant benchmark rate
