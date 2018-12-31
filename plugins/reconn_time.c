@@ -42,6 +42,5 @@ void summary() {
     } while (!__atomic_compare_exchange_n(&summary_displayed, &ov, nv, 1,
                                           __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE));
 
-    __atomic_add_fetch(&summary_displayed, 1, __ATOMIC_RELAXED);
     printf("reconnect times = %zu\n", reconnect_times);
 }
