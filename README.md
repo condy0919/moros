@@ -105,10 +105,3 @@ The`moros`binary will be placed in `moros/bin/`.
 
   _summary_ can report some data collected in above functions.
 
-## Todo
-
-- [x] statistic stat
-- [ ] constant benchmark rate
-- [x] https support
-- [x] plugin support
-
