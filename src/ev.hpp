@@ -156,7 +156,7 @@ public:
     }
 
     template <typename Rep, typename Period, typename Fn>
-    int addTimeEvent(std::chrono::duration<Rep, Period> interval, Fn cb) {
+    int addTimerEvent(std::chrono::duration<Rep, Period> interval, Fn cb) {
         struct timespec now;
         ::clock_gettime(CLOCK_MONOTONIC, &now);
 
