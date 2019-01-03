@@ -26,7 +26,7 @@ Bencher::Bencher(struct addrinfo addr, std::size_t nconn,
 
     start_ = std::chrono::steady_clock::now();
     requests_ = 0;
-    ev_loop_.addTimeEvent(std::chrono::milliseconds(100), [this]() {
+    ev_loop_.addTimerEvent(std::chrono::milliseconds(100), [this]() {
         if (requests_ > 0) {
             const auto elapsed =
                 std::chrono::duration_cast<std::chrono::milliseconds>(
