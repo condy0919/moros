@@ -39,6 +39,8 @@ void Plugin::load(std::string so) {
     if (::dlsym(handle, "want_response_body")) {
         want_response_body_ = true;
     }
+
+    so_ = std::unique_ptr<void, int (*)(void*)>(handle, ::dlclose);
 }
 
 bool Plugin::wantResponseHeaders() const noexcept {

@@ -69,6 +69,7 @@ Connection::Connection(EventLoop& ev_loop, Bencher& b, const std::string& host,
       ssl_(std::move(ssl)),
       host_(host),
       req_(req),
+      written_(0),
       plugin_(plugin) {
     http_parser_init(&parser_, HTTP_RESPONSE);
     parser_.data = this;

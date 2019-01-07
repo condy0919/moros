@@ -4,6 +4,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${moros_SOURCE_DIR}/bin/tests)
 
 include_directories(${moros_SOURCE_DIR}/src ${Boost_INCLUDE_DIRS})
 add_definitions(-DBOOST_TEST_DYN_LINK)
+add_definitions(-std=c++14)
 
 add_executable(numfmt numfmt.cpp)
 target_link_libraries(numfmt ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

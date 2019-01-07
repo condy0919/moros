@@ -62,14 +62,16 @@ std::string numfmt(std::chrono::microseconds us) {
 
 std::string numfmt(double n) {
     static const char* units[] = {
-        "", "K", "M", "G", "T", "P"
+        "", "K", "M", "G", "T", "P", "E", "Z", "Y"
     };
+    static_assert(sizeof(units) / sizeof(units[0]) == 9, "");
 
     std::size_t idx = 0;
-    while (idx < sizeof(units) / sizeof(units[0]) && n > 1024) {
+    while (idx < 8 && n > 1024) {
         n /= 1024;
         ++idx;
     }
+
     return str(boost::format("%.2lf%s") % n % units[idx]);
 }
 
