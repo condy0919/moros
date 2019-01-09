@@ -5,6 +5,7 @@
 
 static __thread size_t counter = 0;
 
+// 如果返回 NULL, 是不会对请求做任何修改的, 会使用上一次的请求
 const char* request(const char* schema, const char* host, const char* port,
                     const char* service, const char* query_string,
                     const char* headers[]) {
@@ -15,6 +16,7 @@ const char* request(const char* schema, const char* host, const char* port,
 
     static __thread char buf[8192];
 
+    // 构造 HTTP 请求
     int n = snprintf(buf, sizeof(buf), "GET /%zu HTTP/1.1\r\n"
                                        "Host: %s\r\n", counter++, host);
     if (n < 0) {
