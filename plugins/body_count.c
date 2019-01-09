@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <strings.h>
 
+// 通过这个符号, response 中的 body, body_len 有意义了
 int want_response_body = 0;
 
 __thread size_t total_flux_in = 0;
