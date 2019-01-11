@@ -89,6 +89,9 @@ public:
         evs_.reserve(sz);
     }
 
+    EventLoop(const EventLoop& rhs) = delete;
+    EventLoop& operator=(const EventLoop& rhs) = delete;
+
     ~EventLoop() noexcept {
         ::close(epfd_);
     }
