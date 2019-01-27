@@ -105,3 +105,6 @@ The`moros`binary will be placed in `moros/bin/`.
 
   _summary_ can report some data collected in above functions.
 
+## TODO
+- [ ] follow 302
+- [ ] async dns resolve
